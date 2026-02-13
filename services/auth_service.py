@@ -1,8 +1,14 @@
 from core.security import hash_password, verify_password
 from infrastructure.repositories import UserRepository
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
+
+
+MAX_ATTEMPTS = 5
+LOCK_TIME = timedelta(minutes=15)
+
 
 class AuthService:
+
     def __init__(self, user_repository: UserRepository):
         self.user_repository = user_repository
 
@@ -14,25 +20,23 @@ class AuthService:
         hashed = hash_password(password)
         return self.user_repository.create(email, hashed)
 
-    MAX_ATTEMPTS = 5
-    LOCK_TIME = timedelta(minutes=15)
-
     def authenticate(self, email: str, password: str):
         user = self.user_repository.get_by_email(email)
+        now = datetime.now(timezone.utc)
 
         if not user:
             return None
 
         # 🔒 Verificar si está bloqueado
-        if user.locked_until and user.locked_until > datetime.utcnow():
+        if user.locked_until and user.locked_until > now:
             return None
 
         if not verify_password(password, user.password_hash):
             user.failed_attempts += 1
-            user.last_failed_attempt = datetime.utcnow()
+            user.last_failed_attempt = now
 
             if user.failed_attempts >= MAX_ATTEMPTS:
-                user.locked_until = datetime.utcnow() + LOCK_TIME
+                user.locked_until = now + LOCK_TIME
 
             self.user_repository.update(user)
             return None
@@ -43,4 +47,3 @@ class AuthService:
         self.user_repository.update(user)
 
         return user
-
