@@ -152,6 +152,11 @@ def dashboard():
         st.session_state.clear()
         st.rerun()
 
+    if st.button("Delete All My Transactions"):
+        transaction_repo.delete_all_by_user(st.session_state["user_id"])
+        st.success("All transactions deleted")
+        st.rerun()
+
 
 def main():
     st.set_page_config(page_title="SmartFinance AI", layout="centered")

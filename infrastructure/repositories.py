@@ -31,5 +31,9 @@ class TransactionRepository:
         self.db.refresh(transaction)
         return transaction
 
+    def delete_all_by_user(self, user_id):
+        self.db.query(Transaction).filter(Transaction.user_id == user_id).delete()
+        self.db.commit()
+
     def get_by_user(self, user_id):
         return self.db.query(Transaction).filter(Transaction.user_id == user_id).all()
