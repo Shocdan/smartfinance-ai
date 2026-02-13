@@ -14,6 +14,9 @@ class User(Base):
     email = Column(String, unique=True, index=True)
     password_hash = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    failed_attempts = Column(Integer, default=0)
+    last_failed_attempt = Column(DateTime, nullable=True)
+    locked_until = Column(DateTime, nullable=True)
 
 
 class Transaction(Base):
